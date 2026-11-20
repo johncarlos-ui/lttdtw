@@ -1,0 +1,19 @@
+---
+import { splitTable, getLine, pageUrl } from '../lib/pages.mjs';
+const { section } = Astro.props;
+const { rows, headers } = splitTable(section.body);
+const slug = name => name.toLowerCase().replaceAll(' ','-');
+---
+<section class="departments wrap" aria-labelledby="department-heading">
+  <div class="section-intro"><h2 id="department-heading">{getLine(section.body,'Heading')}</h2><p>{getLine(section.body,'Text')}</p></div>
+  <div class="dept-track">
+    <nav class="steps" aria-label="Five departments">{rows.map(([name])=><a href={'#department-'+slug(name)}>{name}</a>)}</nav>
+    <div class="stations">{rows.map(([name,...details])=><div class="dept-chapter" id={'department-'+slug(name)}><article class="station">
+      <div class="station-photo"><figure><img loading="lazy" src={'/images/stations/'+slug(name)+'.webp'} width="621" height="412" alt="" /></figure>
+        <h3>{pageUrl(name)?<a href={pageUrl(name)}>{name}</a>:name}</h3>
+      </div>
+      <div class="station-copy"><dl>{details.map((detail,j)=><div><dt>{headers[j+1]}</dt><dd>{detail}</dd></div>)}</dl></div>
+    </article></div>)}</div>
+  </div>
+  <p class="fine">{getLine(section.body,'Line under the table')}</p>
+</section>

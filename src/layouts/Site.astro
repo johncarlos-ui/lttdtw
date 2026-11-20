@@ -1,0 +1,49 @@
+---
+import '../styles/site.css';
+import { byPath, questions, isOnHold } from '../lib/pages.mjs';
+const { page } = Astro.props;
+const s = page.settings;
+const marks = s.Markup || (/^\/solutions\/[^/]+\/[^/]+\/$/.test(page.path) ? 'Service details, the page path, and question-and-answer markup on part 6' : '');
+const schema = [];
+const org = { '@type':'Organization', name:'Let the Tool Do the Work' };
+if (/company details/i.test(marks)) schema.push(org);
+if (/service details/i.test(marks)) schema.push({'@type':'Service', name:page.name, description:s['Search description'], provider:org});
+if (/question-and-answer/i.test(marks)) {
+  const faq = page.sections.flatMap(questions);
+  if (faq.length) schema.push({'@type':'FAQPage', mainEntity:faq.map(({q,a})=>({'@type':'Question',name:q,acceptedAnswer:{'@type':'Answer',text:a}}))});
+}
+const paths = ['/'];
+for (const slug of page.path.split('/').filter(Boolean)) paths.push(paths.at(-1) + slug + '/');
+const crumbs = paths.map((url,i)=>({url, name: s['Path shown above the headline']?.split(', ')[i] || byPath.get(url)?.name || url}));
+if (/page path/i.test(marks)) schema.push({'@type':'BreadcrumbList',itemListElement:crumbs.map(({url,name},i)=>({'@type':'ListItem',position:i+1,name,item:url}))});
+const nav = [['Departments','/solutions/'],['How it works','/how-it-works/'],['Pricing','/pricing/']];
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content={s['Search description']} />
+  {!/^None\b/i.test(s['Search terms it owns']) && <meta name="keywords" content={s['Search terms it owns']} />}
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#000000" />
+  <title>{s['Page title']}</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  {schema.length > 0 && <script type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@graph':schema}).replace(/</g,'\\u003c')} />}
+</head>
+<body class:list={[page.path==='/' && 'home']}>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="header"><div class="wrap headrow">
+    <a class="identity" href="/" aria-label="Let the Tool Do the Work home"><img src="/brand/tw-monogram_dark-background.svg" width="48" height="39" alt="" /><span>LET THE TOOL<br/>DO THE WORK</span></a>
+    <nav aria-label="Primary" class="desktop-nav">{nav.map(([label,url])=><a href={url} aria-current={url===page.path?'page':undefined}>{label}</a>)}</nav>
+    <a class="button head-cta" href="/book/">Book a 20-minute call</a>
+    <details class="mobile-nav"><summary>Menu</summary><nav aria-label="Mobile">{nav.map(([label,url])=><a href={url}>{label}</a>)}<a href="/book/">Book a 20-minute call</a></nav></details>
+  </div></header>
+  <main id="main">
+    {/page path/i.test(marks) && <nav class="wrap crumbs" aria-label="Breadcrumb">{crumbs.map(({url,name},i)=>i===crumbs.length-1?<span aria-current="page">{name}</span>:isOnHold(url)?<span>{name}</span>:<a href={url}>{name}</a>)}</nav>}
+    <slot/>
+  </main>
+  <footer><div class="wrap footgrid"><a href="/" class="identity"><img src="/brand/tw-monogram_dark-background.svg" width="45" height="36" alt="" /><span>LET THE TOOL<br/>DO THE WORK</span></a><nav aria-label="Footer">{['/about/','/solutions/','/industries/','/tools/','/on-site-audit/','/how-we-work/','/pricing/','/book/'].filter(p=>!isOnHold(p)).map(p=><a href={p}>{byPath.get(p).name}</a>)}</nav></div></footer>
+</body></html>

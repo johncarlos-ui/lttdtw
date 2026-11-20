@@ -1,0 +1,41 @@
+---
+import Site from '../layouts/Site.astro';
+import Story from '../components/Story.astro';
+import Hero from '../components/Hero.astro';
+import HomeSection from '../components/HomeSection.astro';
+import Departments from '../components/Departments.astro';
+import Calculator from '../components/Calculator.astro';
+import {pages, isOnHold, getLine, splitTable} from '../lib/pages.mjs';
+import {renderBody} from '../lib/render.mjs';
+import {software} from '../lib/software.mjs';
+export function getStaticPaths(){
+  return pages.filter(page=>!isOnHold(page.path)).map(page=>({params:{path:page.path.split('/').filter(Boolean).join('/') || undefined},props:{page}}));
+}
+const {page}=Astro.props;
+const home=page.path==='/';
+const sections=page.sections.slice(1).filter(s=>!(home && s.number===7));
+const family=page.path.split('/').filter(Boolean);
+const dept=family[0]==='solutions'?pages.find(p=>p.path==='/solutions/'+family[1]+'/')?.name:undefined;
+const names=software[home?'Home':dept]||[];
+const children=pages.filter(p=>p.path!==page.path&&!isOnHold(p.path)&&p.path.startsWith(page.path)&&p.path.split('/').filter(Boolean).length===family.length+1);
+const childLinks = ['/solutions/','/industries/','/tools/'].includes(page.path)||Boolean(dept && family.length===2);
+---
+<Site page={page}>
+  {home ? <Story><Hero page={page}/></Story> : <Hero page={page}/>}
+  {names.length>0 && <div class="works wrap"><b>Works with</b><ul>{names.map(n=><li>{n}</li>)}</ul></div>}
+  {sections.map(s=>{
+    if(home && s.number===4)return <Departments section={s}/>;
+    if(home)return <HomeSection section={s}/>;
+    const book=page.path==='/book/' && s.number===2;
+    const calc=page.path.startsWith('/tools/') && family.length===2 && s.number===2;
+    const close=s.name==='The button'||s.name==='Bottom of the page';
+    const hasHeading=Boolean(getLine(s.body,'Heading')||getLine(s.body,'Headline'));
+    return <section class:list={['copy-section',close && 'closing',home && 'home-section',s.name==='Straight answers' && 'faq-section']}><div class="wrap article-body">
+      {close && <img class="closing-stamp" src="/brand/tw-stamp_22_main-logo_dark-background_transparent.svg" width="92" height="92" alt="" />}
+      {!hasHeading && <h2>{s.name}</h2>}
+      {book ? <><h2>{getLine(s.body,'Heading')}</h2><p class="fine">Booking is unavailable in this preview.</p><fieldset disabled class="input-grid"><legend>Booking details</legend>{splitTable(s.body).rows.map(([label,note],i)=><label>{label}<input type={i===2?'tel':i===3?'email':'text'} required={note==='Required'}/><small>{note}</small></label>)}</fieldset></> :
+       calc ? <Calculator page={page} section={s}/> : <div class="copy" set:html={renderBody(s.body)} />}
+    </div></section>
+  })}
+  {childLinks && children.length>0 && <nav class="related wrap" aria-label={page.name}><ul>{children.map(p=><li><a href={p.path}>{p.name}</a></li>)}</ul></nav>}
+</Site>

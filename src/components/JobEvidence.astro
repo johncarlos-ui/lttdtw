@@ -1,0 +1,94 @@
+---
+import { confirmedPopups } from '../lib/software.mjs';
+import '../styles/job-evidence.css';
+
+const { stop, i } = Astro.props;
+const labels = ['Search and lead', 'Booking conversation', 'Proposed route', 'Draft invoice', 'Payment attribution'];
+const names = ['lead', 'booking', 'route', 'invoice', 'payment'];
+const route = 'M29 113 L46 113 Q50 113 53 109 L68 91 Q71 87 76 87 H94 Q99 87 99 82 V64 Q99 59 104 59 H140 Q145 59 149 63 L161 75 Q165 79 170 79 H192 Q198 79 201 74 L219 46 Q222 42 227 42 H249 Q254 42 257 46 L274 65 Q277 68 282 68 H290';
+const stopsOnRoute = [[29,113], [99,72], [140,59], [184,79], [236,42], [290,68]];
+const streets = [
+  'M-12 66 H30 L63 28 H111 L136 3 V-5', 'M-15 92 H39 L71 52 H88 V20 L111 -4',
+  'M-4 139 L26 113 H46 L70 87 H99 V59 H142 L163 79 H198 L222 42 H253 L277 68 H325',
+  'M34 152 L57 130 H83 L112 98 H148 L174 124 H199 L229 91 H258 L281 114 H327',
+  'M73 156 L91 138 L103 126 H139 L159 146 H207 L228 122 H251 L272 143 H323',
+  'M30 -5 V28 L-5 66', 'M65 -6 V19 L15 79 V108 L-4 127',
+  'M159 -9 L159 28 L142 45 V59 L118 83 V98 L87 130 V153',
+  'M195 -6 L171 19 V38 L153 56 L152 68 L125 96 V123 L107 145',
+  'M235 -5 L200 30 V54 L180 78 V99 L156 122 V148', 'M264 -5 L233 24 V40 L208 79 V108 L181 138 V157',
+  'M311 -8 L267 35 V54 L247 77 V93 L219 121 V151', 'M319 28 L292 54 V78 L272 99 V129 L247 155',
+  'M-8 40 L18 10 H46 M72 12 H130 M-3 106 H24 L44 84 M103 35 H143 L157 20 H177 M121 75 H141',
+  'M146 89 L162 105 H180 M183 40 H206 L226 17 H249 M196 58 H211 M236 59 H266 M244 77 H282',
+  'M52 112 H77 M85 107 H103 M95 148 H129 M199 131 H222 M283 91 H319 M289 128 H325',
+];
+const wave = [4,9,16,11,22,8,15,25,13,6,19,11,23,15,6,12,17,9,4];
+---
+<div class:list={['instrument', 'job-evidence', 'evidence-' + names[i]]} role="group" aria-label={labels[i]}>
+  {i === 0 && <>
+    <div class="evidence-head"><span>Search</span><time>Tuesday, 8:41 p.m.</time></div>
+    <div class="evidence-search" data-cue=".07">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 5.5 5.5"/></svg>
+      <span>{stop.detail[0]}</span><i aria-hidden="true"></i>
+    </div>
+    <div class="evidence-funnel">
+      <div data-cue=".20"><span class="evidence-marker"></span>Ad</div>
+      <div data-cue=".31"><span class="evidence-marker"></span>Landing page</div>
+    </div>
+    <div class="evidence-contact" data-cue=".43">
+      <div class="evidence-contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20v-2c0-3 3-5 7-5s7 2 7 5v2"/></svg></div>
+      <div><small>Lead received</small><strong>{stop.detail[1]}</strong></div>
+    </div>
+  </>}
+  {i === 1 && <>
+    <div class="evidence-head"><span>Messages</span><span>Dana R.</span></div>
+    <div class="evidence-messages">
+      {stop.detail.map((msg, j) => <p class:list={['evidence-bubble', j === 1 && 'evidence-outbound']} data-cue={[0, .20, .35][j]}>{msg}</p>)}
+    </div>
+    <div class="evidence-booked" data-cue=".51">
+      <span class="evidence-tick" aria-hidden="true">✓</span><span>Job #4127 booked</span><strong>8:00 a.m.</strong>
+    </div>
+  </>}
+  {i === 2 && <>
+    <div class="evidence-head"><span>Tomorrow’s route</span><span>Job #4127</span></div>
+    <div class="evidence-atlas">
+      <svg viewBox="0 0 320 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs><pattern id="evidence-parcels" width="24" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(-3)">
+          <path d="M1 1h8v6H1z M12 2h10v4H12z M2 9h12v5H2z M17 8h6v5h-6z" fill="#252a2d"/>
+        </pattern></defs>
+        <rect width="320" height="150" fill="#1b2023"/><rect width="320" height="150" fill="url(#evidence-parcels)"/>
+        <g fill="none" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M-18 159 Q39 120 73 118 T148 87 T230 69 Q272 57 339 -1" stroke="#303d41" stroke-width="13"/>
+          {streets.map((d) => <path d={d} stroke="#101416" stroke-width="5"/>)}
+          {streets.map((d) => <path d={d} stroke="#41474a" stroke-width="1.1"/>)}
+          <path d={route} stroke="#080c0d" stroke-width="6"/>
+          <path class="evidence-route-draw" d={route} pathLength="1" stroke="#4cc9f0" stroke-width="2.6"/>
+          {stopsOnRoute.map(([cx,cy], j) => <circle cx={cx} cy={cy} r={j === 1 ? 5 : 3.3} stroke="#102024" stroke-width="1.7" fill={j === 1 ? '#4cc9f0' : '#e9eef0'}/>)}
+        </g>
+      </svg>
+      <span class="evidence-map-callout" data-cue=".01">Stop 2 of 6</span>
+    </div>
+    <div class="evidence-saving" data-cue=".29"><strong>22 <span>minutes</span></strong><span>of driving removed</span></div>
+    <div class="evidence-proposal" data-cue=".44">Proposed to your dispatcher.</div>
+  </>}
+  {i === 3 && <>
+    <div class="evidence-head"><span>Job #4127</span><span>Field notes</span></div>
+    <div class="evidence-capture">
+      <div class="evidence-photo" data-cue=".01"><img src="/images/stations/invoice.webp" alt="" width="621" height="412" loading="lazy"/><span>Photos in.</span></div>
+      <div class="evidence-audio" data-cue=".14"><div class="evidence-wave" aria-hidden="true">{wave.map(n => <i style={'height:'+n+'px'}></i>)}</div><span>Voice note</span></div>
+    </div>
+    <div class="evidence-paper" data-cue=".22">
+      <div class="evidence-paper-head"><strong>Invoice #4127</strong><small>Draft</small></div>
+      <div class="evidence-item" data-cue=".34">Water heater replaced</div>
+      <div class="evidence-total" data-cue=".46"><span>Total</span><strong>$2,850</strong></div>
+    </div>
+  </>}
+  {i === 4 && <>
+    <div class="evidence-head"><span>Payment received</span><time>2:15 p.m.</time></div>
+    <div class="evidence-receipt" data-cue=".16"><small>Invoice #4127</small><strong>$2,850</strong><span><i class="evidence-tick" aria-hidden="true">✓</i>Paid</span></div>
+    <div class="evidence-attribution" data-cue=".28">
+      <svg viewBox="0 0 66 44" aria-hidden="true"><path class="evidence-trace-draw" pathLength="1" d="M56 2V13Q56 21 48 21H18Q11 21 11 28V38"/><circle cx="11" cy="39" r="3"/></svg>
+      <div data-cue=".44"><small>Google Ads click</small><strong>$41</strong></div>
+    </div>
+  </>}
+  {stop.software.filter(name => confirmedPopups.has(i + ':' + name)).map(name => <span class="software-event">{name}</span>)}
+</div>

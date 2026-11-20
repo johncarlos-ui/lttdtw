@@ -1,0 +1,26 @@
+---
+import { getLine } from '../lib/pages.mjs';
+import { renderBody } from '../lib/render.mjs';
+const { section }=Astro.props;
+const {number,body}=section;
+const title=getLine(body,'Heading')||getLine(body,'Headline');
+const blocks=body.split(/\n\s*\n/).filter(block=>!block.startsWith('**Heading:')&&!block.startsWith('**Headline:'));
+const statement=number===2 ? getLine(body,'Line set large') : '';
+const content=blocks.filter(block=>!block.startsWith('**Line set large:'));
+const comparison=number===3 ? content.find(block=>block.startsWith('|')) : undefined;
+---
+<section class={'home-band band-'+number}>
+  {number===10 && <img class="closing-scene" src="/images/workbench-close.webp" alt="" width="1440" height="810" loading="lazy"/>}
+  <div class="wrap band-inner">
+    <div class="band-title">{number===10 && <img class="closing-stamp" src="/brand/tw-stamp_22_main-logo_dark-background_transparent.svg" alt="" width="112" height="112"/>}<h2>{title}</h2></div>
+    <div class="band-body copy">{content.filter(block=>block!==comparison).map((block,i)=>{
+      if(number===2 && i===0) {
+        const sentences=block.replace(/^\*\*Text:\*\*\s*/,'').match(/[^.!?]+[.!?]+(?:\s+|$)|[^.!?]+$/g) || [];
+        return <p class="sentences">{sentences.map(sentence=><span>{sentence}</span>)}</p>;
+      }
+      return <Fragment set:html={renderBody(block)}/>;
+    })}</div>
+    {comparison && <div class="comparison-table" set:html={renderBody(comparison)} />}
+    {statement && <p class="word-statement">{statement.split(/\s+/).map((word,i)=><>{i>0?' ':''}<span>{word}</span></>)}</p>}
+  </div>
+</section>

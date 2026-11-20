@@ -1,0 +1,34 @@
+---
+import {getLine,heading} from '../lib/pages.mjs';
+import { renderBody } from '../lib/render.mjs';
+const {page}=Astro.props;
+const body=page.sections[0].body;
+const home=page.path==='/';
+const title=heading(page);
+const firstSentence=title.indexOf('. ')+1;
+const lead=body.split('\n\n').filter(s=>!s.startsWith('**Headline:')&&!s.startsWith('**Small line')&&!s.startsWith('**Button:')&&!s.startsWith('**Line under the button:')&&!s.startsWith('**Three facts')&&!s.startsWith('- ')&&!s.startsWith('**Link')).join('\n\n');
+const facts=home?body.split('\n').filter(s=>s.startsWith('- ')).map(s=>s.slice(2)):[];
+const isStation=/^\/(solutions|industries|integrations|tools)\/.+/.test(page.path);
+const segments=page.path.split('/').filter(Boolean);
+const department=segments[0]==='solutions' ? segments[1] : segments[0]==='tools' ? 'finance' : 'operations';
+const station=department ? '/images/stations/'+department+'.webp' : '';
+---
+<section class:list={['hero',home && 'home-hero',isStation && 'with-photo']}>
+  {(home||isStation) && <picture class="hero-photo"><source media="(max-width: 700px)" srcset={home?'/images/workbench-880.webp':station}/><img src={home?'/images/workbench-1760.webp':station} alt="" width={home?1760:621} height={home?990:412} fetchpriority="high"/></picture>}
+  <div class="wrap hero-inner">
+    <div class="hero-title-group">
+      <div class="eyebrow"><span class="blue-rule"></span>{getLine(body,'Small line above the headline')||page.name}</div>
+      <h1>{home && firstSentence > 0 ? <>{title.slice(0,firstSentence)} <span>{title.slice(firstSentence).trim()}</span></> : title}</h1>
+    </div>
+    <div class="hero-support">
+      {!home && <div class="hero-lead" set:html={renderBody(lead)} />}
+      {getLine(body,'Button') && <div class="hero-actions"><a href="/book/" class="button hero-cta">{getLine(body,'Button')}</a></div>}
+      {getLine(body,'Line under the button') && <p class="fine hero-note">{getLine(body,'Line under the button')}</p>}
+    </div>
+  </div>
+  {home && <div class="opening-context wrap">
+    <div class="hero-lead" set:html={renderBody(lead)} />
+    {facts.length>0 && <ul class="facts">{facts.map(f=><li>{f}</li>)}</ul>}
+  </div>}
+  {home && <a class="film-entry wrap" href="#film-lead"><span class="film-entry-track" aria-hidden="true"></span>Follow job #4127</a>}
+</section>

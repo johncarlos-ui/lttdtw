@@ -1,0 +1,36 @@
+---
+import {splitTable} from '../lib/pages.mjs';
+const {page,section} = Astro.props;
+const id = page.path.split('/').filter(Boolean).at(-1);
+const { rows } = splitTable(section.body);
+---
+<div class="calculator" data-kind={id}>
+  <div class="input-grid">{rows.map(([label,example,note],i)=><label>{label}<input type="number" min="0" step="any" inputmode="decimal" data-index={i} placeholder={label==='The multiple'?'':example.replace(/[$,%]/g,'')} /><small>{note}</small></label>)}</div>
+  <div class="calc-output" aria-live="polite" aria-atomic="true"></div>
+</div>
+<script>
+  for(const el of document.querySelectorAll<HTMLElement>('.calculator')){
+    const inputs=Array.from(el.querySelectorAll<HTMLInputElement>('input'));
+    const output=el.querySelector<HTMLElement>('.calc-output')!;
+    const number=(v:number,places=0)=>v.toLocaleString('en-US',{minimumFractionDigits:places,maximumFractionDigits:places});
+    const cash=(v:number,places=0)=>'$'+number(v,places);
+    function update(){
+      const v=inputs.map(i=>i.value!==''&&i.validity.valid?i.valueAsNumber:NaN);
+      const [a,b,c,d,e,f,g]=v;
+      const rows:[string,string][]=[];
+      const add=(label:string,x:number,formatter:(n:number)=>string=cash)=>{if(Number.isFinite(x)&&x>=0)rows.push([label,formatter(x)])};
+      switch(el.dataset.kind){
+        case 'business-value-calculator':
+          add('What the business is worth today',a*b);add('What added profit adds to the price',b*c);add('The new figure',(a+c)*b);break;
+        case 'dso-calculator':
+          add('Days to get paid (DSO)',a/b*365,n=>number(n,2));add('Receivables turnover',b/a,n=>number(n,2));add('One day of revenue',b/365);add('Cash from getting paid sooner',b/365*c);break;
+        case 'truck-hour-calculator':
+          add('Paid truck hours a year',b*c*d,n=>number(n));add('What a truck earns per paid hour',a/(b*c*d),n=>cash(n,2));add('What a truck earns per hour on a job',e<=d?a/(b*c*e):NaN,n=>cash(n,2));add('What a tech hour costs you',f*(1+g/100),n=>cash(n,2));add('Truck hours a year not on a job',b*c*(d-e),n=>number(n));break;
+      }
+      output.replaceChildren();
+      for(const [label,result] of rows){const row=document.createElement('p');const strong=document.createElement('strong');strong.textContent=result;row.append(label+' ',strong);output.append(row)}
+      if(rows.length){const caption=document.createElement('p');caption.className='fine';caption.textContent='They are your numbers, not a promise from us.';output.append(caption)}
+    }
+    el.addEventListener('input',update);
+  }
+</script>

@@ -1,0 +1,16 @@
+{
+  "name": "let-the-tool-do-the-work",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check:copy": "node scripts/check-copy.mjs"
+  },
+  "dependencies": {
+    "astro": "7.3.2",
+    "lenis": "1.3.27"
+  }
+}

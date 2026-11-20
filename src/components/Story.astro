@@ -1,0 +1,55 @@
+---
+import { stops, metrics, displayMetric } from '../lib/story.mjs';
+import JobEvidence from './JobEvidence.astro';
+import { frameCount, travelScreens } from '../lib/film-timeline.mjs';
+import benchTrack from '../lib/bench-track.json';
+import '../styles/home.css';
+import '../styles/sequence.css';
+const chapterNames = ['Lead', 'Booking', 'Route', 'Invoice', 'Payment', 'Dashboard', 'Close'];
+const frameUrls = Array.from({length:frameCount}, (_,i) => './story/frame-'+String(i).padStart(3,'0')+'.webp');
+const metricCell = (metric) => ({ label:metric.label, start:metric.from, end:metric.to, currency:metric.money ? 'usd' : undefined, value:displayMetric(metric,metric.to) });
+---
+<div class="job-film" id="job-story" data-count={frameCount} style={'--film-travel:'+Math.round(travelScreens*100)+'svh'}>
+  <div class="film-stage">
+    <slot/>
+    <div class="film-visual" aria-hidden="true">
+      <picture><source media="(max-width:700px)" srcset="/images/workbench-880.webp"/><img class="film-poster" src="/images/workbench-1760.webp" alt="" width="1760" height="990" loading="lazy" /></picture>
+      <canvas class="film-canvas" width="1120" height="630"></canvas>
+    </div>
+    {benchTrack.screen?.length>0 && <svg class="screen-trace" aria-hidden="true" data-track={JSON.stringify(benchTrack.screen)}>
+      <path class="screen-edge"/><path class="signal-leader"/>
+    </svg>}
+    {benchTrack.objects?.length>0 && <svg class="bench-leader" aria-hidden="true"><line/></svg>}
+    {benchTrack.objects?.length>0 && <button class="bench-point" type="button" data-objects={JSON.stringify(benchTrack.objects)} hidden>
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11"/><path d="M12 16h8m-4-4v8"/></svg>
+      <span class="bench-tip"></span>
+    </button>}
+    <header class="film-heading wrap"><div class="film-id"><span class="signal-line"></span>Job #4127</div><h2 id="film-heading">From ad to cash.</h2></header>
+    <div class="film-panels" role="region" aria-labelledby="film-heading">
+      {stops.map((stop,i)=><article class="film-stop wrap" data-film-panel data-stop={i+1} id={i===0?'film-lead':undefined}>
+        <div class="film-caption">
+          <p class="film-label">{stop.department}</p>
+          <h3>{stop.captions.map((cue,j)=>{
+            const words=cue.text.split(' ');
+            return <Fragment><span class:list={['caption-line',j===1 && 'caption-focus']} data-caption={cue.at} style={'--word-count:'+words.length}>{words.map((word,k)=><Fragment>{k>0 && ' '}<span class="cue-word" style={'--word-index:'+k}>{word}</span></Fragment>)}</span>{j+1<stop.captions.length && ' '}</Fragment>;
+          })}</h3>
+          <p class="caption-help">Select a line to revisit its moment.</p>
+        </div>
+        <JobEvidence stop={stop} i={i}/>
+      </article>)}
+      <article class="film-dashboard wrap" data-film-panel>
+        <div class="dash-head"><div><p class="film-label">Job #4127</p><h3>Profit Dashboard</h3></div><img src="/brand/tw-stamp_22_main-logo_dark-background_transparent.svg" width="58" height="58" alt="" /></div>
+        <div class="dash-values">{metrics.slice(0,3).map(metricCell).map(m=><div><small>{m.label}</small><strong data-from={m.start} data-to={m.end} data-currency={m.currency}>{m.value}</strong></div>)}</div>
+        <h4>Your numbers</h4><div class="dash-values secondary">{metrics.slice(3).map(metricCell).map(m=><div><small>{m.label}</small><strong data-from={m.start} data-to={m.end} data-currency={m.currency}>{m.value}</strong></div>)}</div>
+        <p>Built around the numbers you want to see.</p>
+      </article>
+      <div class="film-end wrap" data-film-panel><img src="/brand/tw-stamp_22_main-logo_dark-background_transparent.svg" alt="" width="222" height="222"/><p>Let the Tool Do the Work</p></div>
+    </div>
+    <div class="film-controls wrap"><nav aria-label="Job story chapters">{chapterNames.map((name,i)=><button type="button" data-beat={i}>{name}</button>)}</nav><a href="#after-job">Skip story</a></div>
+  </div>
+</div>
+<script id="job-frames" type="application/json" set:html={JSON.stringify(frameUrls)}></script>
+<div id="after-job" tabindex="-1"></div>
+<script>
+  import '../scripts/home-motion.js';
+</script>
