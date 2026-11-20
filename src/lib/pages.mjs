@@ -1,7 +1,25 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 
-const copy = readFileSync(resolve('client/Website_Page_Copy_v1_3.md'), 'utf8').replace(/\r\n/g, '\n');
+function readPageCopy() {
+  const packed = process.env.LTTDTW_SITE_COPY_GZIP_BASE64?.trim();
+  if (packed) {
+    try {
+      return gunzipSync(Buffer.from(packed, 'base64')).toString('utf8');
+    } catch {
+      throw new Error('LTTDTW_SITE_COPY_GZIP_BASE64 must contain gzipped page copy encoded as Base64.');
+    }
+  }
+
+  const source = resolve('client/Website_Page_Copy_v1_3.md');
+  if (!existsSync(source)) {
+    throw new Error('Provide client/Website_Page_Copy_v1_3.md or set LTTDTW_SITE_COPY_GZIP_BASE64 for the build.');
+  }
+  return readFileSync(source, 'utf8');
+}
+
+const copy = readPageCopy().replace(/\r\n/g, '\n');
 export const cells = line => line.trim().slice(1, -1).split(/(?<!\\)\|/).map(cell => cell.trim().replace(/\\\|/g, '|'));
 const blocks = copy.split(/^# /m).slice(1);
 const index = blocks[0].split('## The pages')[1].split('\n').filter(line => /^\| [^|]+ \| \//.test(line)).map(cells);
