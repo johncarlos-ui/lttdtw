@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+.work/
+.env
+preview/
+LTTDTW-Preview.html
+LTTDTW-Phase-1-Starter.zip
+client/*.zip
+client/Website-Build-Brief.md
